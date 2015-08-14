@@ -99,26 +99,37 @@ window.Dancer = (function () {
     }
   };
 
+  function attachNode(node) {
+    if (node.nodeType != Node.ELEMENT_NODE) return;
+    var component = Component.for(node);
+    if (component) {
+      component._attach();
+    } else {
+      var constructor = Component.match(node);
+      if (constructor) {
+        new constructor(node);
+      }
+    }
+  }
+
   var observerFunction = function (records) {
     arr(records).map(function (record) {
       arr(record.addedNodes).map(function (node) {
-        if (node.nodeType != Node.ELEMENT_NODE) return;
-        var component = Component.for(node);
-        if (component) {
-          component._attach();
-        } else {
-          var constructor = Component.match(node);
-          if (constructor) {
-            new constructor(node);
-          }
+        for (var className in registry) {
+          var selector = "." + className;
+          arr(node.querySelectorAll(selector)).map(attachNode);
         }
+        attachNode(node);
       });
       arr(record.removedNodes).map(function (node) {
         if (node.nodeType != Node.ELEMENT_NODE) return;
-        var component = Component.for(node);
-        if (component) {
-          component._detach();
+        var subtree = arr(node.querySelectorAll("[dancerId]"));
+        for (var i in subtree) {
+          var component = Component.for(subtree[i]);
+          if (component) component._detach();
         }
+        var component = Component.for(node);
+        if (component) component._detach();
       });
       if (record.attributeName) {
         var tmp = document.createElement("div");

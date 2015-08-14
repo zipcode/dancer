@@ -17,11 +17,13 @@
         } else {
           if (!item1) {
             item1 = document.createElement("div");
-            item1.appendChild(new Text("honk"));
-            item1.classList.add("honk");
+            item2 = document.createElement("div");
+            item1.appendChild(item2);
+            item2.appendChild(new Text("honk"));
+            item2.classList.add("honk");
           }
           ev.target.parentNode.appendChild(item1);
-          window.honk = item1;
+          window.honk = item2;
         }
         state = !state;
       });
