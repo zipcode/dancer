@@ -5,6 +5,12 @@ window.Dancer = (function () {
     return Array.prototype.slice.call(a);
   }
 
+  var console = {
+    log: window.console.log.bind(window.console),
+    warn: window.console.warn.bind(window.console),
+    error: window.console.error.bind(window.console),
+  };
+
   // A mapping from DOM class to element constructor
   var registry = {};
   var elements = [];
@@ -13,12 +19,12 @@ window.Dancer = (function () {
     elements.push(this);
     element.setAttribute("dancerId", elements.length - 1);
     this._element = element;
-    this.attach();
+    this._init();
   }
 
   Component.for = function(element) {
-    if (element.getAttribute(dancerId)) {
-      return elements[dancerId];
+    if (element.getAttribute("dancerId")) {
+      return elements[element.getAttribute("dancerId")];
     }
   }
 
@@ -52,29 +58,94 @@ window.Dancer = (function () {
   }
 
   Component.prototype = {
+    _attach: function () {
+      this._attached = true;
+      this.attach();
+    },
+    _detach: function () {
+      this._attached = false;
+      this.detach();
+    },
     attach: function() {
       console.log("Attached a", this.className);
     },
     detach: function() {
-      console.log("Detached a", thisa.className);
+      console.log("Detached a", this.className);
+    },
+    init: function () {
+      console.log("Inited a", this.className);
+    },
+    _init: function() {
+      this.observer = new MutationObserver(observerFunction);
+      this.observer.observe(this._element, {
+        attributes: true,
+        oldAttributeValue: true,
+        attributeFilter: ["class"],
+      });
+      this.init();
+      this._attach();
+    },
+    _destroy: function() {
+      if (this._attached) {
+        this._detach();
+      }
+      delete elements[this._element.getAttribute("dancerId")];
+      this._element.removeAttribute("dancerId");
+      this.destroy();
+      this.observer.disconnect(this._element);
+    },
+    destroy: function() {
+      console.log("Destroyed a", this.className);
     }
   };
 
-  var observer = new MutationObserver(function (records) {
+  var observerFunction = function (records) {
     arr(records).map(function (record) {
       arr(record.addedNodes).map(function (node) {
         if (node.nodeType != Node.ELEMENT_NODE) return;
-        console.log("Added", node);
+        var component = Component.for(node);
+        if (component) {
+          component._attach();
+        } else {
+          var constructor = Component.match(node);
+          if (constructor) {
+            new constructor(node);
+          }
+        }
       });
       arr(record.removedNodes).map(function (node) {
         if (node.nodeType != Node.ELEMENT_NODE) return;
-        console.log("Removed", node);
+        var component = Component.for(node);
+        if (component) {
+          component._detach();
+        }
       });
       if (record.attributeName) {
-        console.log("Attr", record.attributeName, record.target);
+        var tmp = document.createElement("div");
+        tmp.setAttribute(record.attributeName, record.oldValue);
+        var nextClasses = record.target.classList;
+        var prevClasses = tmp.classList;
+        // Process declassing
+        var component = Component.for(record.target);
+        if (component
+            && !nextClasses.contains(component.className)) {
+              component._destroy();
+        }
+        // Process enclassing
+        nextClasses.forEach(function (c) {
+          if (!(prevClasses.contains(c))) {
+            if (registry[c]) {
+              if (Component.for(record.target)) {
+                throw new Error("Attempted to add class to existing Dancer object: " + c);
+              }
+              new registry[c](record.target);
+            }
+          }
+        });
       }
     });
-  });
+  };
+  var observer = new MutationObserver(observerFunction);
 
   function observe(element) {
     return observer.observe(element, {

@@ -10,18 +10,20 @@
 
       Dancer.register("honk", {});
 
-      var item1
+      var item1, state = false;
       document.getElementById("shifty").addEventListener("click", function(ev) {
-        if (item1) {
+        if (state) {
           item1.remove();
-          item1 = undefined;
         } else {
-          item1 = document.createElement("div");
-          item1.appendChild(new Text("honk"));
-          item1.classList.add("honk");
+          if (!item1) {
+            item1 = document.createElement("div");
+            item1.appendChild(new Text("honk"));
+            item1.classList.add("honk");
+          }
           ev.target.parentNode.appendChild(item1);
           window.honk = item1;
         }
+        state = !state;
       });
     });
   </script>
