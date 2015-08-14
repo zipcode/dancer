@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+  <title>Dancer demo</title>
+  <script lang="javascript" src="./dancer.js"></script>
+  <script lang="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+      console.log("loaded");
+      Dancer.observe(document.body);
+
+      Dancer.register("honk", {});
+
+      var item1
+      document.getElementById("shifty").addEventListener("click", function(ev) {
+        if (item1) {
+          item1.remove();
+          item1 = undefined;
+        } else {
+          item1 = document.createElement("div");
+          item1.appendChild(new Text("honk"));
+          item1.classList.add("honk");
+          ev.target.parentNode.appendChild(item1);
+          window.honk = item1;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <content>
+    <div class="component">
+      <button id="shifty">Shifty</button>
+    </div>
+  </content>
+</body>
+</html>
