@@ -24,12 +24,17 @@ when implementing a Chrome plugin.
 `init` and `attach` fire in order if a new element is attached with a class.
 `detach` and `destroy` fire in order if a class is removed from an attached component.
 
+Dancer matches on classes for the moment. You must register a component for
+each class and no DOM node should have two of these classes at the same time.
+You can use the lifecycle methods to react when the underlying web app creates
+something.
+
 ## Watching a subtree
 ```
 Dancer.observe(document.body);
 ```
 
-## Adding an event handler
+## Adding a component
 ```
 Dancer.register("honk", {
   attach: function() { this.element.style.backgroundColor = "green"; },
