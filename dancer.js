@@ -1,6 +1,6 @@
 'use strict';
 
-window.Dancer = (function () {
+(function () {
   // Helper function because JS is full of array-like objects.
   var arr = function (a) {
     return Array.prototype.slice.call(a);
@@ -204,7 +204,7 @@ window.Dancer = (function () {
 
   function disconnect(element) { return observer.disconnect(element); }
 
-  return {
+  var Dancer = {
     for: Component.for.bind(Component),
     observe: observe,
     disconnect: disconnect,
@@ -212,4 +212,12 @@ window.Dancer = (function () {
     register: Component.register.bind(Component),
     _registry: registry,
   };
-})();
+
+  if (typeof define == 'function' && define.amd) {
+    define(Dancer);
+  } else if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Dancer;
+  } else {
+    this.Dancer = Dancer;
+  }
+}).call(this);
