@@ -71,28 +71,40 @@
     registry[className] = Constructor;
 
     // Get everything already in the document
-    arr(rootNode.querySelectorAll("." + className)).map(attachNode);
+    if (rootNode) {
+      arr(rootNode.querySelectorAll("." + className)).map(attachNode);
+    }
 
     return Constructor;
   }
 
   Component.prototype = {
-    _attach: function () {
+    _attach: function (element) {
+      if (!element) throw new Error("Empty element");
+      if (this.element !== element) {
+        // Re-entrant call within a clone
+        element.removeAttribute("dancerId");
+        var constructor = Component.match(element);
+        new constructor(element);
+        return
+      }
+      if (this._attached) return;
       this._attached = true;
       this.attach();
     },
     _detach: function () {
+      if (!this._attached) return;
       this._attached = false;
       this.detach();
     },
     attach: function() {
-      console.log("Attached a", this.className);
+      console.log("Attached a", this.className, this.dancerId);
     },
     detach: function() {
-      console.log("Detached a", this.className);
+      console.log("Detached a", this.className, this.dancerId);
     },
     init: function () {
-      console.log("Inited a", this.className);
+      console.log("Inited a", this.className, this.dancerId);
     },
     _init: function() {
       // This is purely for spotting when a class is removed from an object
@@ -104,7 +116,7 @@
         attributeFilter: ["class"],
       });
       this.init();
-      this._attach();
+      this._attach(this.element);
     },
     _destroy: function() {
       if (this._attached) {
@@ -116,9 +128,14 @@
       this.observer.disconnect(this.element);
     },
     destroy: function() {
-      console.log("Destroyed a", this.className);
+      console.log("Destroyed a", this.className, this.dancerId);
     }
   };
+  Object.defineProperty(Component.prototype, "dancerId", {
+    get() {
+      return this.element.getAttribute("dancerId");
+    }
+  });
 
   // Fired when an element is attached.  Either look it up and send it the
   // event or create it from whole cloth.
@@ -126,7 +143,7 @@
     if (node.nodeType != Node.ELEMENT_NODE) return;
     var component = Component.for(node);
     if (component) {
-      component._attach();
+      component._attach(node);
     } else {
       var constructor = Component.match(node);
       if (constructor) {
@@ -137,16 +154,6 @@
 
   var observerFunction = function (records) {
     arr(records).map(function (record) {
-      arr(record.addedNodes).map(function (node) {
-        if (node.nodeType != Node.ELEMENT_NODE) return;
-        // Hunt for other components in the subtree and attach
-        for (var className in registry) {
-          var selector = "." + className;
-          arr(node.querySelectorAll(selector)).map(attachNode);
-        }
-        // Attach root
-        attachNode(node);
-      });
       arr(record.removedNodes).map(function (node) {
         if (node.nodeType != Node.ELEMENT_NODE) return;
         // Hunt for Components in the subtree and detach
@@ -158,6 +165,16 @@
         // Detach
         var component = Component.for(node);
         if (component) component._detach();
+      });
+      arr(record.addedNodes).map(function (node) {
+        if (node.nodeType != Node.ELEMENT_NODE) return;
+        // Hunt for other components in the subtree and attach
+        for (var className in registry) {
+          var selector = "." + className;
+          arr(node.querySelectorAll(selector)).map(attachNode);
+        }
+        // Attach root
+        attachNode(node);
       });
       if (record.attributeName) {
         // Create a fake element just so we can get a classList
@@ -198,6 +215,10 @@
       attributeFilter: ['class'],
     });
     rootNode = element;
+    for (var className in registry) {
+      var selector = "." + className;
+      arr(element.querySelectorAll(selector)).map(attachNode);
+    }
     attachNode(element);
     return res;
   }
