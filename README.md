@@ -36,3 +36,10 @@ Dancer.register("honk", {
   detach: function() { this.element.style.backgroundColor = "initial"; }
 });
 ```
+
+## Manipulating your object
+```
+var element = document.querySelector(".honk");
+var honk = Dancer.for(element);
+honk.honk();
+```
