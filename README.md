@@ -5,7 +5,7 @@ This is pretty rough around the edges. Anyway, here's the deal.
 ## Overview
 Dancer is a parasitic web framework.  It does not attempt to be a web framework
 in its own right, but rather to piggyback on what some other web framework is
-doing.  It achieves this by using the MutationObserver class to watch when nodes
+doing.  It achieves this by using the `MutationObserver` class to watch when nodes
 are added or removed from the DOM and when classes are added and removed from an
 element.
 
@@ -25,10 +25,14 @@ when implementing a Chrome plugin.
 `detach` and `destroy` fire in order if a class is removed from an attached component.
 
 ## Watching a subtree
-```Dancer.observe(document.body)```
+```
+Dancer.observe(document.body);
+```
 
 ## Adding an event handler
-```Dancer.register("honk", {
+```
+Dancer.register("honk", {
   attach: function() { this.element.style.backgroundColor = "green"; },
   detach: function() { this.element.style.backgroundColor = "initial"; }
-});```
+});
+```
