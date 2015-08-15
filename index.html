@@ -8,24 +8,34 @@
       console.log("loaded");
       Dancer.observe(document.body);
 
-      Dancer.register("honk", {});
+      c = Dancer.register("honk", {
+        attach: function() { this.element.style.backgroundColor = "green"; },
+        detach: function() { this.element.style.backgroundColor = "initial"; }
+      });
 
-      var item1, state = false;
-      document.getElementById("shifty").addEventListener("click", function(ev) {
+      var state = false;
+      var item1 = document.createElement("div");
+      item2 = document.createElement("div");
+      item1.appendChild(item2);
+      item2.appendChild(new Text("honk"));
+      item2.classList.add("honk");
+
+      document.getElementById("show").addEventListener("click", function(ev) {
         if (state) {
           item1.remove();
         } else {
-          if (!item1) {
-            item1 = document.createElement("div");
-            item2 = document.createElement("div");
-            item1.appendChild(item2);
-            item2.appendChild(new Text("honk"));
-            item2.classList.add("honk");
-          }
           ev.target.parentNode.appendChild(item1);
           window.honk = item2;
         }
         state = !state;
+      });
+
+      document.getElementById("classer").addEventListener("click", function (ev) {
+        if (honk.classList.contains("honk")) {
+          honk.classList.remove("honk");
+        } else {
+          honk.classList.add("honk");
+        }
       });
     });
   </script>
@@ -33,7 +43,8 @@
 <body>
   <content>
     <div class="component">
-      <button id="shifty">Shifty</button>
+      <button id="show">Show/Hide</button>
+      <button id="classer">Add/remove class</button>
     </div>
   </content>
 </body>

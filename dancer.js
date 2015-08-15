@@ -14,11 +14,12 @@ window.Dancer = (function () {
   // A mapping from DOM class to element constructor
   var registry = {};
   var elements = [];
+  var rootNode = null;
 
   function Component(element) {
     elements.push(this);
     element.setAttribute("dancerId", elements.length - 1);
-    this._element = element;
+    this.element = element;
     this._init();
   }
 
@@ -43,10 +44,8 @@ window.Dancer = (function () {
 
   Component.register = function(className, constructor) {
     var proto = Object.create(Component.prototype);
-    for (var key in Object.keys(constructor)) {
-      if (constructor.hasOwnProperty(key)) {
-        proto[key] = constructor.key;
-      }
+    for (var key in constructor) {
+      proto[key] = constructor[key];
     }
     function Constructor(element) {
       Component.call(this, element);
@@ -54,6 +53,10 @@ window.Dancer = (function () {
     Constructor.prototype = proto;
     Constructor.prototype.className = className;
     registry[className] = Constructor;
+
+    // Get everything already in the document
+    arr(rootNode.querySelectorAll("." + className)).map(attachNode);
+
     return Constructor;
   }
 
@@ -77,7 +80,7 @@ window.Dancer = (function () {
     },
     _init: function() {
       this.observer = new MutationObserver(observerFunction);
-      this.observer.observe(this._element, {
+      this.observer.observe(this.element, {
         attributes: true,
         oldAttributeValue: true,
         attributeFilter: ["class"],
@@ -89,10 +92,10 @@ window.Dancer = (function () {
       if (this._attached) {
         this._detach();
       }
-      delete elements[this._element.getAttribute("dancerId")];
-      this._element.removeAttribute("dancerId");
+      delete elements[this.element.getAttribute("dancerId")];
+      this.element.removeAttribute("dancerId");
       this.destroy();
-      this.observer.disconnect(this._element);
+      this.observer.disconnect(this.element);
     },
     destroy: function() {
       console.log("Destroyed a", this.className);
@@ -159,13 +162,16 @@ window.Dancer = (function () {
   var observer = new MutationObserver(observerFunction);
 
   function observe(element) {
-    return observer.observe(element, {
+    var res = observer.observe(element, {
       subtree: true,
       childList: true,
       attributes: true,
       attributeOldValue: true,
       attributeFilter: ['class'],
     });
+    rootNode = element;
+    attachNode(element);
+    return res;
   }
 
   function disconnect(element) { return observer.disconnect(element); }
