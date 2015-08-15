@@ -9,8 +9,18 @@
       Dancer.observe(document.body);
 
       c = Dancer.register("honk", {
+        init: function () {
+          this.honks = document.createElement("span");
+          this.button = document.createElement("button");
+          this.button.innerText="Honk!";
+          document.querySelector(".component").appendChild(this.button);
+          this.button.addEventListener("click", this.honk.bind(this));
+          this.element.appendChild(this.honks);
+        },
         attach: function() { this.element.style.backgroundColor = "green"; },
-        detach: function() { this.element.style.backgroundColor = "initial"; }
+        detach: function() { this.element.style.backgroundColor = "initial"; },
+        destroy: function() { this.honks.remove(); this.button.remove(); },
+        honk: function() { this.honks.appendChild(new Text(" honk!")); }
       });
 
       var state = false;
@@ -19,13 +29,15 @@
       item1.appendChild(item2);
       item2.appendChild(new Text("honk"));
       item2.classList.add("honk");
+      window.honk = item2;
 
       document.getElementById("show").addEventListener("click", function(ev) {
         if (state) {
           item1.remove();
+          document.getElementById("show").innerText="Attach";
         } else {
           ev.target.parentNode.appendChild(item1);
-          window.honk = item2;
+          document.getElementById("show").innerText="Detach";
         }
         state = !state;
       });
@@ -33,8 +45,10 @@
       document.getElementById("classer").addEventListener("click", function (ev) {
         if (honk.classList.contains("honk")) {
           honk.classList.remove("honk");
+          document.getElementById("classer").innerText = "Add class";
         } else {
           honk.classList.add("honk");
+          document.getElementById("classer").innerText = "Remove class";
         }
       });
     });
@@ -43,8 +57,8 @@
 <body>
   <content>
     <div class="component">
-      <button id="show">Show/Hide</button>
-      <button id="classer">Add/remove class</button>
+      <button id="show">Attach</button>
+      <button id="classer">Remove class</button>
     </div>
   </content>
 </body>
