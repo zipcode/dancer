@@ -21,6 +21,11 @@ when implementing a Chrome plugin.
 * `detach` fires when a component is removed from the DOM
 * `destroy` fires when a class is removed from an element
 
+These lifecycle events do not receive arguments. `this` is set to the
+Dancer object.  If you use es6 you should take care to use
+`function(){}` syntax and not `()=>{}` syntax as this will bind `this`
+to the wrong value.
+
 `init` and `attach` fire in order if a new element is attached with a class.
 `detach` and `destroy` fire in order if a class is removed from an attached component.
 
@@ -28,6 +33,11 @@ Dancer matches on classes for the moment. You must register a component for
 each class and no DOM node should have two of these classes at the same time.
 You can use the lifecycle methods to react when the underlying web app creates
 something.
+
+## Other callbacks
+* `attribute` fires with the name of an attribute and its new value, if an attribute is changed.
+
+The class attribute is currently filtered out, as is `dancerid`.
 
 ## Watching a subtree
 ```
@@ -38,7 +48,8 @@ Dancer.observe(document.body);
 ```
 Dancer.register("honk", {
   attach: function() { this.element.style.backgroundColor = "green"; },
-  detach: function() { this.element.style.backgroundColor = "initial"; }
+  detach: function() { this.element.style.backgroundColor = "initial"; },
+  honk: function() { console.log("honk!"); },
 });
 ```
 
