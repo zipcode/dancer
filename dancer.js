@@ -90,12 +90,12 @@
       }
       if (this._attached) return;
       this._attached = true;
-      this.attach();
+      this.attach.call(this);
     },
     _detach: function () {
       if (!this._attached) return;
       this._attached = false;
-      this.detach();
+      this.detach.call(this);
     },
     attach: function() {
       console.log("Attached a", this.className, this.dancerId);
@@ -115,17 +115,25 @@
         oldAttributeValue: true,
         attributeFilter: ["class"],
       });
-      this.init();
-      this._attach(this.element);
+      this.init.call(this);
+      this._attach.call(this, this.element);
     },
     _destroy: function() {
       if (this._attached) {
-        this._detach();
+        this._detach.call(this);
       }
       delete elements[this.element.getAttribute("dancerId")];
       this.element.removeAttribute("dancerId");
-      this.destroy();
+      this.destroy.call(this);
       this.observer.disconnect(this.element);
+    },
+    _attribute: function(name, value) {
+      if (this.attribute) {
+        this.attribute.call(this, name, value);
+      }
+    },
+    attribute: function(name, value) {
+      console.log("Attr changed: ", name, value, this.dancerId);
     },
     destroy: function() {
       console.log("Destroyed a", this.className, this.dancerId);
@@ -177,6 +185,12 @@
         attachNode(node);
       });
       if (record.attributeName) {
+        if (record.attributeName == "dancerid") return;
+        if (record.attributeName != "class") {
+          var component = Component.for(record.target);
+          component._attribute(record.attributeName, component.element.getAttribute(record.attributeName));
+          return
+        }
         // Create a fake element just so we can get a classList
         var tmp = document.createElement("div");
         tmp.setAttribute(record.attributeName, record.oldValue);
@@ -212,7 +226,6 @@
       childList: true,
       attributes: true,
       attributeOldValue: true,
-      attributeFilter: ['class'],
     });
     rootNode = element;
     for (var className in registry) {
@@ -241,4 +254,5 @@
   } else {
     this.Dancer = Dancer;
   }
+  return Dancer;
 }).call(this);
