@@ -188,6 +188,7 @@
         if (record.attributeName == "dancerid") return;
         if (record.attributeName != "class") {
           var component = Component.for(record.target);
+          if (!component) return;
           component._attribute(record.attributeName, component.element.getAttribute(record.attributeName));
           return
         }
